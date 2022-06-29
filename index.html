@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>{{{COMPANY_NAME}}} - {{{PRODUCT_NAME}}}</title>
+
+		<link rel="stylesheet" href="./Build/style.css">
+	</head>
+
+	<body>
+		<div id="container">
+			<canvas id="canvas"></canvas>
+		</div>
+
+		<div id="cover">
+			<div id="loading-bar">
+				<div id="progress-container">
+					<div id="progress-fill"></div>
+				</div>
+
+				<div id="progress-text">LOADING</div>
+
+				<div id="progress-spinner"></div>
+			</div>
+		</div>
+	</body>
+
+	<script defer>
+		const target = `./Build/{{{LOADER_FILENAME}}}`;
+		const config = {
+			dataUrl: `./Build/{{{DATA_FILENAME}}}`,
+			frameworkUrl: `./Build/{{{FRAMEWORK_FILENAME}}}`,
+			codeUrl: `./Build/{{{CODE_FILENAME}}}`,
+			streamingAssetsUrl: `StreamingAssets`,
+			companyName: `{{{COMPANY_NAME}}}`,
+			productName: `{{{PRODUCT_NAME}}}`,
+			productVersion: `{{{PRODUCT_VERSION}}}`,
+		};
+
+		#if MEMORY_FILENAME
+		config["memoryUrl"] = `./Build/{{{MEMORY_FILENAME}}}`;
+		#endif
+
+		#if SYMBOLS_FILENAME
+		config["symbolsUrl"] = `./Build/{{{SYMBOLS_FILENAME}}}`;
+		#endif
+
+		const container = document.querySelector("#container");
+		const canvas = document.querySelector("#canvas");
+		const cover = document.querySelector("#cover");
+
+		const progContainer = document.querySelector("#progress-container");
+		const progFill = document.querySelector("#progress-fill");
+		const progText = document.querySelector("#progress-text");
+		const progSpinner = document.querySelector("#progress-spinner");
+
+		const unityScript = document.createElement("script");
+
+		const canGoFullScreen = (function () {
+			for (const key of [
+				"exitFullscreen",
+				"webkitExitFullscreen",
+				"webkitCancelFullScreen",
+				"mozCancelFullScreen",
+				"msExitFullscreen",
+			]) {
+				if (key in document) {
+					return true;
+				}
+			}
+
+			return false;
+		}());
+
+		function loadUnityScript() {
+			unityScript.src = target;
+
+			unityScript.onload = () => {
+				progContainer["style"]["display"] = "";
+
+				createUnityInstance(canvas, config, (progress) => progFill["style"]["width"] = `${100 * progress}`)
+					.then((instance) => {
+						cover["style"]["display"] = "none";
+
+						// if (canGoFullScreen) {
+						// 	instance.SetFullscreen(1);
+						// }
+					})
+					.catch((message) => {
+						console.error(message);
+
+						if (message.includes("memory access out of bounds")) {
+							alert("Error: Out of Memory | Not enough memory");
+						}
+					});
+			};
+
+			document.body.appendChild(unityScript);
+		}
+
+		loadUnityScript();
+	</script>
+
+</html>
