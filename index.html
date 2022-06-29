@@ -140,15 +140,6 @@
 						}
 					},
 				});
-
-				createUnityInstance(canvas, config, (progress) => progFill["style"]["width"] = `${100 * progress}`)
-					.catch((message) => {
-						console.error(message);
-
-						if (message.includes("memory access out of bounds")) {
-							alert("Error: Out of Memory | Not enough memory");
-						}
-					});
 			};
 
 			document.body.appendChild(unityScript);
