@@ -5,7 +5,8 @@
 		<meta charset="UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>{{{COMPANY_NAME}}} - {{{PRODUCT_NAME}}}</title>
+		<!-- <title>{{{COMPANY_NAME}}} - {{{PRODUCT_NAME}}}</title> -->
+		<title>%UNITY_WEB_NAME%</title>
 
 		<link rel="stylesheet" href="./Build/style.css">
 	</head>
@@ -29,24 +30,24 @@
 	</body>
 
 	<script defer>
-		const target = `./Build/{{{LOADER_FILENAME}}}`;
-		const config = {
-			dataUrl: `./Build/{{{DATA_FILENAME}}}`,
-			frameworkUrl: `./Build/{{{FRAMEWORK_FILENAME}}}`,
-			codeUrl: `./Build/{{{CODE_FILENAME}}}`,
-			streamingAssetsUrl: `StreamingAssets`,
-			companyName: `{{{COMPANY_NAME}}}`,
-			productName: `{{{PRODUCT_NAME}}}`,
-			productVersion: `{{{PRODUCT_VERSION}}}`,
-		};
+		const target = `%UNITY_WEBGL_LOADER_URL%`;
+		// const config = {
+		// 	dataUrl: `./Build/{{{DATA_FILENAME}}}`,
+		// 	frameworkUrl: `./Build/{{{FRAMEWORK_FILENAME}}}`,
+		// 	codeUrl: `./Build/{{{CODE_FILENAME}}}`,
+		// 	streamingAssetsUrl: `StreamingAssets`,
+		// 	companyName: `{{{COMPANY_NAME}}}`,
+		// 	productName: `{{{PRODUCT_NAME}}}`,
+		// 	productVersion: `{{{PRODUCT_VERSION}}}`,
+		// };
 
-		#if MEMORY_FILENAME
-		config["memoryUrl"] = `./Build/{{{MEMORY_FILENAME}}}`;
-		#endif
+		// #if MEMORY_FILENAME
+		// config["memoryUrl"] = `./Build/{{{MEMORY_FILENAME}}}`;
+		// #endif
 
-		#if SYMBOLS_FILENAME
-		config["symbolsUrl"] = `./Build/{{{SYMBOLS_FILENAME}}}`;
-		#endif
+		// #if SYMBOLS_FILENAME
+		// config["symbolsUrl"] = `./Build/{{{SYMBOLS_FILENAME}}}`;
+		// #endif
 
 		const container = document.querySelector("#container");
 		const canvas = document.querySelector("#canvas");
@@ -81,14 +82,66 @@
 			unityScript.onload = () => {
 				progContainer["style"]["display"] = "";
 
-				createUnityInstance(canvas, config, (progress) => progFill["style"]["width"] = `${100 * progress}`)
-					.then((instance) => {
-						cover["style"]["display"] = "none";
+				const unityInstance = UnityLoader.instantiate("container", "%UNITY_WEBGL_BUILD_URL%", {
+					compatibilityCheck: (instance, success, error) => {
+						if (!UnityLoader.SystemInfo.hasWebGL) {
+							// unityInstance.popup("Your browser does not support WebGL",
+							// 	[{ text: "OK", callback: onerror }]);
+							alert("Error: Your browser does not support WebGL");
+						} else if (UnityLoader.SystemInfo.mobile) {
+							// unityInstance.popup("Please note that Unity WebGL is not currently supported on mobiles. Press OK if you wish to continue anyway.",
+							// 	[{ text: "OK", callback: onsuccess }]);
+							alert("Please note that mobile browsers are not officially supported.");
+						} else if (
+							["Edge", "Firefox", "Chrome"/* , "Safari" */].indexOf(UnityLoader.SystemInfo.browser) == -1
+						) {
+							// unityInstance.popup("Please note that your browser is not currently supported for this Unity WebGL content. Press OK if you wish to continue anyway.",
+							// 	[{ text: "OK", callback: onsuccess }]);
+							alert("Please note that this browser is not officially supported.");
+						} else {
+							success();
+						}
+					},
+					onProgress: (instance, progress) => {
+						if (!instance.Module) {
+							return;
+						}
 
-						// if (canGoFullScreen) {
-						// 	instance.SetFullscreen(1);
+						// if (!instance.logo) {
+						// 	instance.logo = document.createElement("div");
+						// 	instance.logo.className = `logo ${instance.Module.splashScreenStyle}`;
+						// 	instance.container.appendChild(instance.logo);
 						// }
-					})
+
+						// if (!instance.progress) {
+						// 	instance.progress = progContainer;
+						// 	// instance.progress.className = `progress ${instance.Module.splashScreenStyle}`;
+						// 	// instance.progress.empty =
+						// 	// instance.progress.empty.className = `empty`;
+						// 	// instance.progress.appendChild(instance.progress.empty);
+						// 	instance.progress.full = progFill;
+						// 	// instance.progress.full.className = `full`;
+						// 	instance.progress.appendChild(instance.progress.full);
+						// 	instance.container.appendChild(instance.progress);
+						// }
+
+						// instance.progress.full.style.width = (100 * progress) + "%";
+						// instance.progress.empty.style.width = (100 * (1 - progress)) + "%";
+
+						progFill["style"]["width"] = `${100 * progress}`;
+
+						if (progress == 1) {
+							// instance.logo.style.display = instance.progress.style.display = "none";
+							cover["style"]["display"] = "none";
+
+							// if (canGoFullScreen) {
+							// 	instance.SetFullscreen(1);
+							// }
+						}
+					},
+				});
+
+				createUnityInstance(canvas, config, (progress) => progFill["style"]["width"] = `${100 * progress}`)
 					.catch((message) => {
 						console.error(message);
 
